@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 3a67ea80-0d33-4556-8376-87e852160810
+
+localResources:
+  collections:
+    - ..\AI-Genius-Postman-Collection.json

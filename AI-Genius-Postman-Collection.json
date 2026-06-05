@@ -1,0 +1,225 @@
+{
+  "info": {
+    "name": "AI-Genius — JWT Auth & RBAC Demo",
+    "_postman_id": "ai-genius-assignment-03",
+    "description": "Complete workflow: Login → Access Protected API → Token Expires → Refresh Token → Access Denied on unauthorized roles.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:3000" },
+    { "key": "ACCESS_TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1️⃣  Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{BASE_URL}}/", "host": ["{{BASE_URL}}"], "path": [""] }
+      }
+    },
+    {
+      "name": "── AUTH ENDPOINTS ──",
+      "item": [
+        {
+          "name": "2️⃣  Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('ACCESS_TOKEN', json.accessToken);",
+                  "  console.log('✅ Access token saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ai-genius.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "3️⃣  Login as Premium User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('ACCESS_TOKEN', json.accessToken);",
+                  "  console.log('✅ Premium access token saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"premium@ai-genius.com\",\n  \"password\": \"premium123\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "4️⃣  Login as Free User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('ACCESS_TOKEN', json.accessToken);",
+                  "  console.log('✅ Free user access token saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"free@ai-genius.com\",\n  \"password\": \"free123\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "5️⃣  Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('ACCESS_TOKEN', json.accessToken);",
+                  "  console.log('✅ New access token saved after refresh.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/auth/refresh", "host": ["{{BASE_URL}}"], "path": ["api","auth","refresh"] },
+            "description": "Uses the httpOnly cookie set during login. No body needed."
+          }
+        },
+        {
+          "name": "6️⃣  Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/auth/logout", "host": ["{{BASE_URL}}"], "path": ["api","auth","logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "── AI ENDPOINTS (RBAC) ──",
+      "item": [
+        {
+          "name": "7️⃣  Free Model — All Users ✅",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/ai/free-model", "host": ["{{BASE_URL}}"], "path": ["api","ai","free-model"] },
+            "description": "Accessible by any logged-in user."
+          }
+        },
+        {
+          "name": "8️⃣  Premium Model — Premium + Admin ✅",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Generate a futuristic city skyline\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/ai/premium-model", "host": ["{{BASE_URL}}"], "path": ["api","ai","premium-model"] },
+            "description": "Login as Free_User first → expect 403 Forbidden."
+          }
+        },
+        {
+          "name": "9️⃣  Purge Cache — Admin Only ✅",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/ai/purge-cache", "host": ["{{BASE_URL}}"], "path": ["api","ai","purge-cache"] },
+            "description": "Login as Premium_User first → expect 403 Forbidden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "── ERROR SCENARIOS ──",
+      "item": [
+        {
+          "name": "🔴  No Token — 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/ai/free-model", "host": ["{{BASE_URL}}"], "path": ["api","ai","free-model"] }
+          }
+        },
+        {
+          "name": "🔴  Invalid Token — 401 Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer this.is.a.fake.token" }],
+            "url": { "raw": "{{BASE_URL}}/api/ai/free-model", "host": ["{{BASE_URL}}"], "path": ["api","ai","free-model"] }
+          }
+        },
+        {
+          "name": "🔴  Wrong Role (Free tries Premium) — 403 Forbidden",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"prompt\": \"test\"}" },
+            "url": { "raw": "{{BASE_URL}}/api/ai/premium-model", "host": ["{{BASE_URL}}"], "path": ["api","ai","premium-model"] },
+            "description": "Login as free@ai-genius.com first, then run this."
+          }
+        },
+        {
+          "name": "🔴  Wrong Credentials — 401",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ai-genius.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": { "raw": "{{BASE_URL}}/api/auth/login", "host": ["{{BASE_URL}}"], "path": ["api","auth","login"] }
+          }
+        }
+      ]
+    }
+  ]
+}
